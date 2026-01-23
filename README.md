@@ -1,3 +1,5 @@
+Forked from https://github.com/charliekilpatrick/Swift_host_subtraction which is forked from https://github.com/gterreran/Swift_host_subtraction.
+
 # Swift Host Subtraction
 
 This is a python package to perform aperture photometry on a single source in data from the Ultraviolet Optical Telescope ([UVOT](https://swift.gsfc.nasa.gov/about_swift/uvot_desc.html); [Roming et al. 2005](https://ui.adsabs.harvard.edu/abs/2005SSRv..120...95R/abstract)) on board the [Neil Gehrels Swift Observatory](https://swift.gsfc.nasa.gov) ([Gehrels et al. 2004](https://ui.adsabs.harvard.edu/abs/2004ApJ...611.1005G/abstract)). In particular, this package is oriented towards transient studies, as it can calculate template-subtracted luminosities if a template image, or a list of template images, is provided. 
