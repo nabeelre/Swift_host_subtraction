@@ -1,30 +1,36 @@
-import subprocess,sys
+import subprocess
+import sys
+
 
 def run(_command):
-    pid = subprocess.Popen(_command,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    
-    output,error = pid.communicate()
+    pid = subprocess.Popen(_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    output, error = pid.communicate()
     if error:
-        print('ERROR while running '+_command)
+        print('ERROR while running ' + _command)
         print(error)
         sys.exit()
     return output
 
-def uvotimsum(_in,_out,_exclude='none'):
-    comm = 'uvotimsum %s %s exclude=%s' % (_in,_out,_exclude)
+
+def uvotimsum(_in, _out, _exclude='none'):
+    comm = 'uvotimsum %s %s exclude=%s' % (_in, _out, _exclude)
     run(comm)
 
-def uvotmaghist(_in,_reg,_bgreg,_out,_gif):
+
+def uvotmaghist(_in, _reg, _bgreg, _out, _gif):
     comm = 'uvotmaghist %s srcreg=%s bkgreg=%s  outfile=%s plotfile=%s coinfile=caldb zerofile=caldb exclude=none chatter=0 clobber=yes logtime=no psffile=caldb apercorr=curveofgrowth' % (_in,_reg,_bgreg,_out,_gif)
-    
+
     run(comm)
 
-def fappend(_in,_out):
-    comm = 'fappend '+_in+' '+_out
+
+def fappend(_in, _out):
+    comm = 'fappend ' + _in + ' ' + _out
     run(comm)
-    
-def fcopy(_in,_out):
-    comm = 'fcopy '+_in+' '+_out
+
+
+def fcopy(_in, _out):
+    comm = 'fcopy ' + _in + ' ' + _out
     run(comm)
 
 
@@ -50,7 +56,3 @@ def fcopy(_in,_out):
 #    uvotskycorr('ID',_infile,'NONE',attfile,corrfile)
 #
 #    uvotskycorr('ID',_infile,corrfile,attfile,'NONE')
-
-
-
-

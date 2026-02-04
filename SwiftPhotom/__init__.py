@@ -24,5 +24,5 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 __author__ = 'Giacomo Terreran <gterreran@lco.global>'
 __credits__ = ['Peter Brown <grbpeter@yahoo.com>']
-__all__ = ['commands','help','uvot']
+__all__ = ['commands', 'help', 'uvot']
 del get_versions
