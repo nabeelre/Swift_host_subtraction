@@ -14,4 +14,4 @@ filter='Selection of filters to be analysed. Acceptable filters: V, B, U, UVW1, 
 
 no_combine='Prevents to merge different extensions of a single file. If set True, this applies to all files, including the template.'
 
-obj='Name of object to save output data.'
+outdir='Directory to save output data.'

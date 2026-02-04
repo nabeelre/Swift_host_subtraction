@@ -188,7 +188,7 @@ def combine(_list, _outfile):
             sc.fappend(img, _outfile)
 
 
-def create_product(_flist, _filter, template=0, no_combine=0):
+def create_product(_flist, _filter, outdir, template=0, no_combine=0):
     '''
     If a file has multiple extensions, these are
     first combined into a single image. If the
@@ -208,11 +208,11 @@ def create_product(_flist, _filter, template=0, no_combine=0):
     During this step, the aspect correction for each
     file is also checked.
     '''
-    out_dir = os.path.join('reduction', _filter, 'mid-products')
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
+    product_dir = os.path.join(outdir, 'reduction', _filter, 'mid-products')
+    if not os.path.isdir(product_dir):
+        os.mkdir(product_dir)
 
-    fig_dir = os.path.join('reduction', _filter, 'figures')
+    fig_dir = os.path.join(outdir, 'reduction', _filter, 'figures')
     if not os.path.isdir(fig_dir):
         os.mkdir(fig_dir)
 
@@ -230,7 +230,7 @@ def create_product(_flist, _filter, template=0, no_combine=0):
             continue
 
         obsID = hdu[0].header['OBS_ID']
-        out_file = os.path.join(out_dir, obsID + '_' + _filter + '.fits')
+        out_file = os.path.join(product_dir, obsID + '_' + _filter + '.fits')
         if os.path.isfile(out_file):
             os.remove(out_file)
 
@@ -241,7 +241,7 @@ def create_product(_flist, _filter, template=0, no_combine=0):
                 continue
             framtime.append(hdu[i].header['FRAMTIME'])
         if len(set(framtime)) == 1:
-            sc.uvotimsum(file, out_file, _exclude='none')
+            sc.uvotimsum(file, out_file, _exclude='none', traceback=True)
             prod_list.append(out_file)
         else:
             print('WARNING - extensions of ' + file +
@@ -260,9 +260,9 @@ def create_product(_flist, _filter, template=0, no_combine=0):
         objname = objname.replace(',', '_')
         objname = objname.replace(' ', '_')
 
-        prod_out_file = os.path.join('reduction', _filter, objname + '_' + _filter + '.img')
+        prod_out_file = os.path.join(outdir, 'reduction', _filter, objname + '_' + _filter + '.img')
     else:
-        prod_out_file = os.path.join('reduction', _filter, 'templ_' + _filter + '.img')
+        prod_out_file = os.path.join(outdir, 'reduction', _filter, 'templ_' + _filter + '.img')
     if os.path.isfile(prod_out_file):
         os.remove(prod_out_file)
 
@@ -271,8 +271,8 @@ def create_product(_flist, _filter, template=0, no_combine=0):
     return prod_out_file
 
 
-def run_uvotmaghist(_prod_file, _sn_reg, _bg_reg, _filter):
-    fig_dir = os.path.join('reduction', _filter, 'figures')
+def run_uvotmaghist(_prod_file, _sn_reg, _bg_reg, _filter, outdir):
+    fig_dir = os.path.join(outdir, 'reduction', _filter, 'figures')
     photo_out = _prod_file[:-4] + '_phot.fits'
     gif_out = os.path.join(fig_dir, _prod_file.split('/')[-1][:-4] + '_phot.gif')
     if os.path.isfile(photo_out):
@@ -284,7 +284,7 @@ def run_uvotmaghist(_prod_file, _sn_reg, _bg_reg, _filter):
     return photo_out
 
 
-def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
+def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, outdir, _templ_file=None):
     # The default aperture of uvotmaghist is 5 arcsec.
     # Corrections to retrieve this fluxes are provide.
     # We can compare the 2 apertures.
@@ -344,7 +344,7 @@ def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
         else:
             S5BCRe = np.sqrt((S5CRe)**2 + (dd['COI_BKG_RATE_ERR'] * dd['STD_AREA'])**2)
 
-        fig_dir = os.path.join('reduction', filter, 'figures')
+        fig_dir = os.path.join(outdir, 'reduction', filter, 'figures')
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
@@ -541,14 +541,14 @@ def extract_photometry(_phot_file, _ab, _det_limit, _ap_size, _templ_file=None):
     return mag
 
 
-def output_mags(_mag, _ap_size, obj=None):
+def output_mags(_mag, _ap_size, outdir):
     user_ap = _ap_size + '_arcsec'
 
-    with open(os.path.join('reduction', _ap_size + '_arcsec_photometry.json'),
+    with open(os.path.join(outdir, "reduction", _ap_size + '_arcsec_photometry.json'),
               'w') as out:
         out.write(json.dumps(_mag[user_ap], indent=4))
 
-    with open(os.path.join('reduction', '5_arcsec_photometry.json'), 'w') as out:
+    with open(os.path.join(outdir, "reduction", '5_arcsec_photometry.json'), 'w') as out:
         out.write(json.dumps(_mag['5_arcsec'], indent=4))
 
     print('5-arcsec output photometry:\n')
@@ -562,8 +562,8 @@ def output_mags(_mag, _ap_size, obj=None):
             newdata.append(val)
     _mag['5_arcsec'] = newdata
 
-    if obj:
-        outfile = open(obj + '_Swift.phot', 'w')
+    if outdir:
+        outfile = open(os.path.join(outdir, "reduction", 'Swift.phot'), 'w')
 
     for photom in _mag['5_arcsec']:
         mjd = photom['mjd']
@@ -580,5 +580,5 @@ def output_mags(_mag, _ap_size, obj=None):
         magerr = '%.4f' % magerr
 
         print(mjd, filt, mag, magerr)
-        if obj:
+        if outdir:
             outfile.write(f'{mjd} {filt} {mag} {magerr} \n')
