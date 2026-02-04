@@ -92,7 +92,9 @@ extras_require = {
 packagenames = find_packages()
 
 # Executables go in a folder called bin
-scripts = glob.glob(os.path.join('bin', '*'))
+# Filter out directories (like __pycache__) and only include Python files
+scripts = [f for f in glob.glob(os.path.join('bin', '*'))
+           if os.path.isfile(f) and f.endswith('.py')]
 
 PACKAGENAME = 'Swift_host_subtraction'
 DISTNAME = 'Swift-host-subtraction'
