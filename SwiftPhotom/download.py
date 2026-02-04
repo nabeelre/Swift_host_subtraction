@@ -53,42 +53,45 @@ def get_swift_data(ra, dec, radius=30.0 * u.arcmin, discovery_date='2023-10-01',
     radius = radius.to(u.arcmin).value
 
     table = heasarc.query_region(coord, mission=mission, radius=f'{radius} arcmin')
-    table['OBSID'] = [str(i) for i in table['OBSID']]
-    table.sort('START_TIME')
+    table = table.to_pandas()
 
-    # Get only unique values of OBSID for downloading
-    table = unique(table, keys='OBSID', keep='first')
+    # Sort by start time and keep only unique obsids
+    table = table.sort_values(by='start_time')
+    table['obsid'] = table['obsid'].astype(str)
+    table = table.drop_duplicates(subset='obsid', keep='first')
+    table = table.reset_index(drop=True)
 
     # Create new row to decide if data are science or template
     discovery_date = Time(discovery_date)
     max_delta_date = max_delta_date.to(u.day)
     dt = TimeDelta(max_delta_date)
     obs_type = []
-    for row in table:
-        t = Time(row['START_TIME'], format='mjd')
+    for i, row in table.iterrows():
+        t = Time(row['start_time'], format='mjd')
 
         if t < discovery_date or t > discovery_date + dt:
             obs_type.append('template')
         else:
             obs_type.append('science')
 
-    table.add_column(Column(obs_type, name='OBS_TYPE'))
+    table['obs_type'] = obs_type
 
     return table
 
 
-def download_swift_data(obstable, outdir='.'):
+def download_swift_data(obstable, outdir=''):
 
-    obstable.sort('OBSID')
-    for row in obstable:
+    obstable = obstable.sort_values(by='obsid')
+    for i, row in obstable.iterrows():
 
-        date = Time(row['START_TIME'], format='mjd')
+        date = Time(row['start_time'], format='mjd')
         month = date.datetime.strftime('%m')
         year = date.datetime.strftime('%Y')
-        obsid = row['OBSID']
+        obsid = row['obsid']
 
         cmd = 'wget -q -nH --no-clobber --no-check-certificate --cut-dirs=5 -r '
         cmd += '-l0 -c -np -R \'index*\' -erobots=off --retr-symlinks '
+        cmd += f'-P {outdir!r} '
         url = f'https://heasarc.gsfc.nasa.gov/FTP/swift/data/obs/{year}_{month}/{obsid}/uvot/'
 
         cmd += url
@@ -131,7 +134,6 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
     template_data = []
 
     for file in glob.glob(globstr):
-
         hdu = fits.open(file)
 
         # Calculate exposure time from each image frame
@@ -146,6 +148,7 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
         filt = hdu[0].header['FILTER'].strip()
 
         if filt.upper() not in ['U', 'B', 'V', 'UVW1', 'UVW2', 'UVM2', 'W']:
+            print(filt, 'not a valid filter', file)
             continue
 
         in_image = False
@@ -163,12 +166,12 @@ def create_run_files(ra, dec, obstable, outdir='.', phot_radius=5.0 * u.arcsec,
                 in_image = True
 
         if not in_image:
+            print('not in image', file)
             continue
 
         obsid = hdu[0].header['OBS_ID']
-        mask = obstable['OBSID'] == obsid
-
-        obs_type = obstable[mask][0]['OBS_TYPE']
+        mask = obstable['obsid'] == obsid
+        obs_type = obstable[mask].iloc[0]['obs_type']
 
         if obs_type == 'science':
             science.write(file + '\n')
@@ -257,11 +260,6 @@ def main(argv=None):
     download_swift_data(obstable)
 
     sn, bkg, sci, tmpl = create_run_files(ra, dec, obstable, verbose=True)
-
-    print(sn)
-    print(bkg)
-    print(sci)
-    print(tmpl)
 
     return sn, bkg, sci, tmpl
 
