@@ -21,8 +21,24 @@
 """
 
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 __author__ = 'Giacomo Terreran <gterreran@lco.global>'
 __credits__ = ['Peter Brown <grbpeter@yahoo.com>']
-__all__ = ['commands', 'help', 'uvot']
+
+# Re-export commonly used submodules and functions
+from . import commands, help, uvot
+from .download import get_swift_data, download_swift_data, create_run_files
+from .photom_host import run_swift_photom
+
+__all__ = [
+    'commands',
+    'help',
+    'uvot',
+    'get_swift_data',
+    'download_swift_data',
+    'create_run_files',
+    'run_swift_photom',
+]
+
 del get_versions
