@@ -1,20 +1,29 @@
+import os
 import subprocess
 import sys
 
 
 def run(_command):
-    pid = subprocess.Popen(_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pid = subprocess.Popen(
+        _command, shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    output, _ = pid.communicate()
+    returncode = pid.returncode
 
-    output, error = pid.communicate()
-    if error:
+    if returncode != 0:
         print('ERROR while running ' + _command)
-        print(error)
+        if output:
+            print(output.decode('utf-8', errors='replace'))
         sys.exit()
+
     return output
 
 
-def uvotimsum(_in, _out, _exclude='none'):
-    comm = 'uvotimsum %s %s exclude=%s' % (_in, _out, _exclude)
+def uvotimsum(_in, _out, _exclude='none', traceback=False):
+    comm = 'uvotimsum ' + _in + ' ' + _out + ' exclude=' + _exclude
+    if traceback:
+        comm += ' %tb'
     run(comm)
 
 
