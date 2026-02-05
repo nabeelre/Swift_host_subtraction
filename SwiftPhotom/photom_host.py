@@ -89,7 +89,7 @@ def run_swift_photom(infile, outdir, sn_reg='sn.reg', bg_reg='snbkg.reg',
                                             filter_name, outdir=outdir)
 
             mag_filter = up.extract_photometry(phot_file, ab, det_limit,
-                                               ap_size, outdir=outdir, templ_file=templ_file)
+                                               ap_size, outdir=outdir, _templ_file=templ_file)
 
         else:
             mag_filter = up.extract_photometry(phot_file, ab, det_limit,
