@@ -2,7 +2,6 @@ from astroquery.heasarc import Heasarc
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from astropy.time import Time, TimeDelta
-from astropy.table import unique, Column
 from astropy.io import fits
 from astropy import wcs
 import os
