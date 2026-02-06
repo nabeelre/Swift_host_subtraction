@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 
-def run(_command):
+def run(_command, verbose=False):
     pid = subprocess.Popen(
         _command, shell=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -11,37 +11,51 @@ def run(_command):
     output, _ = pid.communicate()
     returncode = pid.returncode
 
-    if returncode != 0:
-        print('ERROR while running ' + _command)
+    if verbose or returncode != 0:
+        print('CMD:', _command)
         if output:
             print(output.decode('utf-8', errors='replace'))
+        if returncode != 0:
+            print('Return code:', returncode)
+
+    if returncode != 0:
+        print('ERROR while running ' + _command)
         sys.exit()
 
     return output
 
 
 def uvotimsum(_in, _out, _exclude='none', traceback=False):
-    comm = 'uvotimsum ' + _in + ' ' + _out + ' exclude=' + _exclude
-    if traceback:
-        comm += ' %tb'
-    run(comm)
+    _in = os.path.abspath(_in)
+    _out = os.path.abspath(_out)
+    comm = 'uvotimsum %s %s exclude=%s' % (_in, _out, _exclude)
+    # if traceback:
+    #     comm += ' %tb'
+    run(comm, verbose=True)  # TODO: set verbose=False after debugging
 
 
 def uvotmaghist(_in, _reg, _bgreg, _out, _gif):
     comm = 'uvotmaghist %s srcreg=%s bkgreg=%s  outfile=%s plotfile=%s ' \
-        'coinfile=caldb zerofile=caldb exclude=none chatter=0 clobber=yes ' \
-        'logtime=no psffile=caldb apercorr=curveofgrowth' % (_in, _reg, _bgreg, _out, _gif)
+           'coinfile=caldb zerofile=caldb exclude=none chatter=0 clobber=yes ' \
+           'logtime=no psffile=caldb apercorr=curveofgrowth ' \
+           'skipbad=yes' % (_in, _reg, _bgreg, _out, _gif)
 
     run(comm)
 
 
 def fappend(_in, _out):
-    comm = 'fappend ' + _in + ' ' + _out
+    # Use absolute paths so HEASoft can find files regardless of working directory
+    _in = os.path.abspath(_in)
+    _out = os.path.abspath(_out)
+    comm = 'fappend "' + _in + '" "' + _out + '"'
     run(comm)
 
 
 def fcopy(_in, _out):
-    comm = 'fcopy ' + _in + ' ' + _out
+    # Use absolute paths so HEASoft can find files regardless of working directory
+    _in = os.path.abspath(_in)
+    _out = os.path.abspath(_out)
+    comm = 'fcopy "' + _in + '" "' + _out + '"'
     run(comm)
 
 

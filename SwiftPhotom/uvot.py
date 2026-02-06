@@ -182,6 +182,11 @@ def combine(_list, _outfile):
     Combines images with fappend
     '''
     for i, img in enumerate(_list):
+        # For FITS extension syntax (file.fits[1]), check the base file exists
+        img_path = img.split('[')[0] if '[' in img else img
+        if not os.path.isfile(img_path):
+            raise FileNotFoundError(
+                'Input file not found before fcopy/fappend: %s' % img_path)
         if i == 0:
             sc.fcopy(img, _outfile)
         else:
